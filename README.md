@@ -298,7 +298,7 @@ select
    requestParameters
 from default.cloudtrail_log
 WHERE useridentity.accesskeyid = 'AKIAEXAMPLE'
-AND from\_iso8601\_timestamp(eventtime) > date\_add('day', -90, now());
+AND from_iso8601_timestamp(eventtime) > date_add('day', -90, now())
 order by eventTime
 ```
 
