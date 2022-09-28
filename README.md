@@ -3,7 +3,7 @@
 
 ## Preparation and Response to AWS Cloud Credential Breaches
 
-This is a preparation and response guide for learning how to deal with credential breaches in AWS. Fircy runs training that uses this as the guide for the training course, and you can use it yourself! It's to help you learn about responding to an incident related to credential breaches in AWS. The credentials we cover in this are IAM users with an access key. Access keys can be easy to accidentally share online, especially in public repositories. This training has been designed to run in teams of 2 or more people, where you each have an AWS account and attack each other.
+This is a preparation and response guide for learning how to deal with credential breaches in AWS. Fircy runs training that uses this as the guide for the training course, and you can use it yourself! It's to help you learn about responding to an incident related to credential breaches in AWS. It is designed to be used in pre-configured and pre-breached AWS accounts setup by Fircy at training events. The credentials we cover in this are IAM users with an access key. Access keys can be easy to accidentally share online, especially in public repositories. This training has been designed to run in teams of 2 or more people, where you each have an AWS account and attack each other.
 
 **WARNING**
 This guide makes use of IAM users and access keys which should not be used in production. Instead of IAM users you should centralise your identities and use the [AWS Single Sign-On](https://aws.amazon.com/single-sign-on/) service. Temporary access keys and tokens with least privilege should be used instead of IAM user access keys. For more information on best practices see the [Identity and Access Management](https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/identity-and-access-management.html) section of AWS Well-Architected.
@@ -15,80 +15,35 @@ This guide makes use of IAM users and access keys which should not be used in pr
 
 NOTE: AWS will charge you for any AWS resources used that are not covered in the [AWS Free Tier](https://aws.amazon.com/free/).
 
+## Preparation
+
+If you are taking this training with Fircy then the following services have already been configured which are all important in preparing for an incident in AWS:
+
+* [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) is a service that enables governance, compliance, operational auditing, and risk auditing of your AWS account. With CloudTrail, you can log, continuously monitor, and retain account activity related to actions across your AWS infrastructure. CloudTrail provides event history of your AWS account activity, including actions taken through the AWS Management Console, AWS SDKs, command line tools, and other AWS services. This event history simplifies security analysis, resource change tracking, and troubleshooting.
+
+* [Amazon Athena]( https://aws.amazon.com/athena/) is an interactive query service that makes it easy to analyze data in Amazon S3 using standard SQL. Athena is serverless, so there is no infrastructure to manage, and you pay only for the queries that you run. You can use Athena to query CloudTrail logs directly stored in S3 at scale.
+
+* [AWS Config](https://aws.amazon.com/config/) is a service that enables you to assess, audit, and evaluate the configurations of your AWS resources. Config continuously monitors and records your AWS resource configurations and allows you to automate the evaluation of recorded configurations against desired configurations. With Config, you can review changes in configurations and relationships between AWS resources, dive into detailed resource configuration histories, and determine your overall compliance against the configurations specified in your internal guidelines.
+
+* [AWS Security Hub](https://aws.amazon.com/security-hub/) gives you a comprehensive view of your security alerts and security posture across your AWS accounts. There are a range of powerful security tools at your disposal, from firewalls and endpoint protection to vulnerability and compliance scanners. But oftentimes this leaves your team switching back-and-forth between these tools to deal with hundreds, and sometimes thousands, of security alerts every day. With Security Hub, you now have a single place that aggregates, organizes, and prioritizes your security alerts, or findings, from multiple AWS services, such as Amazon GuardDuty, Amazon Inspector, Amazon Macie, AWS Identity and Access Management (IAM) Access Analyzer, AWS Systems Manager, and AWS Firewall Manager, as well as from AWS Partner Network (APN) solutions. AWS Security Hub continuously monitors your environment using automated security checks based on the AWS best practices and industry standards that your organization follows.
+
+* [Amazon GuardDuty](https://aws.amazon.com/guardduty/) is a threat detection service that continuously monitors for malicious activity and unauthorized behavior to protect your AWS accounts, workloads, and data stored in Amazon S3. With the cloud, the collection and aggregation of account and network activities is simplified, but it can be time consuming for security teams to continuously analyze event log data for potential threats. With GuardDuty, you now have an intelligent and cost-effective option for continuous threat detection in AWS. The service uses machine learning, anomaly detection, and integrated threat intelligence to identify and prioritize potential threats. GuardDuty analyzes tens of billions of events across multiple AWS data sources, such as AWS CloudTrail event logs, Amazon VPC Flow Logs, and DNS logs.
+
 
 ***
 
 
-## Hands-on #1: Configure CloudTrail
+## Hands-on #1: Login and explore
 
-In this hands-on exercise we are going to:
-* Login to the AWS console
-* Configure [AWS CloudTrail](https://aws.amazon.com/cloudtrail/) in your home region.
-* Configure [AWS CloudTrail Lake](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-lake.html)
 
-[AWS CloudTrail](https://aws.amazon.com/cloudtrail/) is a service that enables governance, compliance, operational auditing, and risk auditing of your AWS account. With CloudTrail, you can log, continuously monitor, and retain account activity related to actions across your AWS infrastructure. CloudTrail provides event history of your AWS account activity, including actions taken through the AWS Management Console, AWS SDKs, command line tools, and other AWS services. This event history simplifies security analysis, resource change tracking, and troubleshooting.
 
 ### Login to console
 
-1.1 Login to the AWS console of your AWS account you use for testing or training.
+1.1 Login to the AWS console provided by Fircy, or of your AWS account you use for testing or training.
 
-1.2 Select your closest region from the top menu close to right hand side.
+1.2 Select the Sydney region from the top menu close to right hand side.
 
-### Configure CloudTrail
-
-1.3 Using the top menu services search or the services drop down, select *CloudTrail*.
-
-1.4 Select *Create a trail*.
-
-![CloudTrail](images/cloudtrail-1.png)
-
-If your account already has a trail, for example an AWS provided training account, your setup experience is different:
-
-![CloudTrail](images/cloudtrail-1a.png)
-
-1.5 For this training you can accept the defaults and select *Create trail*.
-
-![CloudTrail](images/cloudtrail-2.png)
-
-If your options do not look like the ones above, they will look like the ones below. Enter *management-events* as the *Trail name* and disable *Log file SSE-KMS encryption* then select *Next*, *Next* again, then *Create trail*.
-
-![CloudTrail](images/cloudtrail-2a.png)
-
-1.6  Your trail is now setup! Select the name of the trail *management-events*. You can now explore the different configuration options in CloudTrail! By default it will log management events to the S3 bucket it just created for you.
-
-![CloudTrail](images/cloudtrail-3.png)
-
-### Configure CloudTrail Lake
-
-1.7 We are now going to configure [CloudTrail Lake](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-lake.html) which allows us to query the data stored by CloudTrail. Enable the Lake feature by selecting *Lake* from the left menu, then *Create event data store*. 
-
-![CloudTrail](images/cloudtrail-4.png)
-
-1.8 Enter an *Event data store name* of *cloudtrail*, accept the defaults and select *Next*. 
-
-![CloudTrail](images/cloudtrail-5.png)
-
-1.9 For Choose events accept the defaults and select *Next*.
-
-![CloudTrail](images/cloudtrail-6.png)
-
-1.10 Select *Create event data store* to create the lake. You will see the next page have a status that will turn to *Enabled*.
-
-![CloudTrail](images/cloudtrail-7.png)
-
-1.11 You can now investigate the *Sample queries* and execute them against your CloudTrail.
-
-![CloudTrail](images/cloudtrail-8.png)
-
-1.12 Note that as you have only just setup CloudTrail and Lake it will normally take at least 5 minutes to start seeing events. Explore other services in the console to generate events and go back to check.
-
-This simple query you can edit in the *Editor* allows you to test by searching for all events, replace *Event-data-store-ID* with the ID in the console:
-
-```
-SELECT * FROM Event-data-store-ID LIMIT 50
-```
-
-![CloudTrail](images/cloudtrail-9.png)
+1.3 Explore AWS services using top navigation bar.
 
 
 ***
@@ -120,7 +75,7 @@ aws iam list-users
 
 This uses the *aws* CLI to select the *iam* service and issue *list-users* command. You will see a list of IAM users in your account in JSON format.
 
-2.3 Now that works using your existing console credentials, test your new user and its access key that you just created. We can do this by setting an environment variable that the CLI will use. Run the following commands replacing YOUR_ACCESS_KEY and YOUR_SECRET_KEY with the ones you saved from when you created them.
+2.3 Now that works using your existing console credentials, test your new user and its access key that you just created. We can do this by setting an environment variable that the CLI will use. Run the following commands replacing YOUR_ACCESS_KEY and YOUR_SECRET_KEY with the ones you saved from when you created them. This replaces the existing credentials that were provided under your session.
 
 ```
 export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
@@ -128,6 +83,8 @@ export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
 ```
 
 2.4 Run the `aws iam list-users` command again to test your new user. If you receive an error check your export commands do not have any extra spaces and the keys are identical to what you saved. If you receive a permissions error check the policy you attached to the IAM user. Note: If CloudShell times out at any stage you can simply press enter and it will resume / prepare the session again.
+
+2.5 You can run `aws sts get-caller-identity` to return the identity that is making the call. Note this command works even if the user has no permission.
 
 
 ***
@@ -188,87 +145,24 @@ In this hands-on exercise we are going to:
 
 [Amazon Athena]( https://aws.amazon.com/athena/) is an interactive query service that makes it easy to analyze data in Amazon S3 using standard SQL. Athena is serverless, so there is no infrastructure to manage, and you pay only for the queries that you run. You can use Athena to query CloudTrail logs directly stored in S3 at scale.
 
-4.1 The fast-track way of using Athena is by accessing the [CloudTrail console](https://console.aws.amazon.com/cloudtrail/) and select *Event history* from the right menu, then *Create Athena table* on the right.
+4.1 Athena should already be configured in your account. Open the Athena console at https://console.aws.amazon.com/athena/.
 
-![CloudTrail](images/cloudtrail-11.png)
+4.2 If this is your first time to visit the Athena console in your current AWS Region, choose Explore the query editor to open the query editor. Otherwise, Athena opens in the query editor.
 
-4.2 Select your S3 bucket used for CloudTrail in *Storage location*, then select *Create table*. Select the link at the top of your browser to access the newly created Athena table.
+4.3 Choose View Settings to set up a query result location in Amazon S3.
 
-4.3 In a new browser tab, access the [S3 console](https://console.aws.amazon.com/s3/) and create a new S3 bucket that will contain logs for the Athena service, in your primary region where you configure CloudTrail. Bucket names must be globally unique across all customers of AWS, and adhere to [bucket naming rules](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html).
+4.4 On the Settings tab, choose Manage.
 
-4.4 Go back to the [Athena console](https://console.aws.amazon.com/athena/) tab.
+4.5 For Manage settings, Choose Browse S3, choose the Amazon S3 bucket with the name containing athena, then Choose.
 
-4.5 Click *Get Started* to display the main Athena console.
-
-4.6 A number of banners will be displayed, look for one *Before you run your first query, you need to set up a query result location in Amazon S3* and click the link to set up a query result location in Amazon S3.
-
-4.7 In *Query result and encryption settings* Click *Manage*, then *Browse* and choose the bucket you created before by selecting the small right arrow next to the name. Accept the defaults then *Save*.
-
-The steps below are for manually configuring the Athena table if the fast-track way did not work for you.
-
-4.8 Now create the table for querying the CloudTrail logs. Athena supports both partitioned and unpartitioned tables, this example uses unpartitioned tables as the queries are easier, however if you have lots of logs then partitioning based on date or region can reduce query times. Find out more from the Athena documentation for CloudTrail. 
-
-In the query editor insert the following query to create the table then click *Run query*, replace *CLOUDTRAIL-BUCKET-NAME* with your CloudTrail bucket name:
-```
-CREATE EXTERNAL TABLE cloudtrail_log (
-eventversion STRING,
-useridentity STRUCT<
-               type:STRING,
-               principalid:STRING,
-               arn:STRING,
-               accountid:STRING,
-               invokedby:STRING,
-               accesskeyid:STRING,
-               userName:STRING,
-sessioncontext:STRUCT<
-attributes:STRUCT<
-               mfaauthenticated:STRING,
-               creationdate:STRING>,
-sessionissuer:STRUCT<  
-               type:STRING,
-               principalId:STRING,
-               arn:STRING, 
-               accountId:STRING,
-               userName:STRING>>>,
-eventtime STRING,
-eventsource STRING,
-eventname STRING,
-awsregion STRING,
-sourceipaddress STRING,
-useragent STRING,
-errorcode STRING,
-errormessage STRING,
-requestparameters STRING,
-responseelements STRING,
-additionaleventdata STRING,
-requestid STRING,
-eventid STRING,
-resources ARRAY<STRUCT<
-               ARN:STRING,
-               accountId:STRING,
-               type:STRING>>,
-eventtype STRING,
-apiversion STRING,
-readonly STRING,
-recipientaccountid STRING,
-serviceeventdetails STRING,
-sharedeventid STRING,
-vpcendpointid STRING
-)
-ROW FORMAT SERDE 'com.amazon.emr.hive.serde.CloudTrailSerde'
-STORED AS INPUTFORMAT 'com.amazon.emr.cloudtrail.CloudTrailInputFormat'
-OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
-LOCATION 's3://CLOUDTRAIL-BUCKET-NAME/';
-```
+4.6 Choose Save.
 
 
 ### Query CloudTrail logs
 
-4.9 To run a test query, click the triple dots next to the table name under table, then click *Preview table*. It will automatically create a query for you like ```SELECT * FROM "default"."cloudtrail_log" limit 10;``` and you should see some results. This means Athena is querying your CloudTrail logs directly from S3!
+4.7 To run a test query, click the triple dots next to the table name under table, then click *Preview table*. It will automatically create a query for you like ```SELECT * FROM "default"."cloudtrail_log" limit 10;``` and you should see some results. This means Athena is querying your CloudTrail logs directly from S3!
 
-4.10 Here are some sample queries to get you started, you can find more in an open source repository too: https://github.com/easttimor/aws-incident-response
-
-NOTE: If you used the fast track method to create the table, AWS creates a random table name which you'll need to use in place of *cloudtrail_log* used throughout the examples.
+4.8 There are a number of saved queries already in the *Saved queries* tab. CloudTrail queries are prefixed "CT" while the others "VPC" are for VPC Flow Logs. You can find more in an open source repository too: https://github.com/easttimor/aws-incident-response. Here are some examples:
 
 
 #### Identities
@@ -351,27 +245,8 @@ where errorcode = 'Unauthorized' OR errorcode = 'Denied' OR errorcode = 'Forbidd
 
 ***
 
-## Hands-on #5: Enable GuardDuty
 
-In this hands-on exercise we are going to:
-* Enable GuardDuty in current region
-* Enable GuardDuty in US East (N. Virginia) region
-
-[Amazon GuardDuty](https://aws.amazon.com/guardduty/) is a threat detection service that continuously monitors for malicious activity and unauthorized behavior to protect your AWS accounts, workloads, and data stored in Amazon S3. With the cloud, the collection and aggregation of account and network activities is simplified, but it can be time consuming for security teams to continuously analyze event log data for potential threats. With GuardDuty, you now have an intelligent and cost-effective option for continuous threat detection in AWS. The service uses machine learning, anomaly detection, and integrated threat intelligence to identify and prioritize potential threats. GuardDuty analyzes tens of billions of events across multiple AWS data sources, such as AWS CloudTrail event logs, Amazon VPC Flow Logs, and DNS logs.
-
-5.1 Access the [AWS GuardDuty](https://console.aws.amazon.com/guardduty/) console and select *Get Started*.
-
-5.2 Select *Enable GuardDuty*.
-
-5.3 Select US East (N. Virginia) region from top menu drop down. Repeat steps 5.1 & 5.2
-
-5.4 That's all there is to configuring GuardDuty! However it is important to configure the findings to go somewhere, e.g. email or Slack so you don't have to login and check. If you have time follow the instructions [Creating custom responses to GuardDuty findings with Amazon CloudWatch Events](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty_findings_cloudwatch.html) in the GuardDuty documentation for email notification.
-
-
-***
-
-
-## Hands-on #6: Establish persistence
+## Hands-on #5: Establish persistence
 
 In this hands-on exercise we are going to:
 * Create a method for persistence in your partners account
@@ -382,33 +257,33 @@ In this hands-on exercise we are going to:
 
 You need to create at least one method of maintaining persistence in your partners account with the objective of not being discovered quickly. This is a common method that adversaries use to continue their activities after you discover the initial entry point, e.g. an access key leaked. There are many methods you can use with a few listed below as a start. As you will see they all require privileged access to be granted in the first place, which is why you should only use least-privileged permissions outside of this training. Also consider a combination of methods, the more complex it is the more difficult it will be to contain and eradicate. For this training do not take any action that could lockout your partner from managing their account – play nice! Now is also a good time to create two timelines; one for the actions you are taking on them, and another for the actions they are taking on you.
 
-6.1 Create an access key for an existing IAM user
+5.1 Create an access key for an existing IAM user
 
 Each IAM user can have 2 access keys, each of which can be enabled or disabled. It’s simple to create a new access key for an existing user if they only have 1 assigned or 1 disabled. If your partner is looking for new events from the IAM user they will start to see the new access key used. This is very simple and can easily be discovered.
 
-6.2 Create new IAM user
+5.2 Create new IAM user
 
 Simple creating a new IAM user, especially if the account has many of them, is simple however you can gain console access by using a new password instead of changing an existing one. This is very simple and can easily be discovered.
 
-6.3 Create new IAM role
+5.3 Create new IAM role
 
 Create an IAM role that can be assumed by an IAM user (using the trust policy) or another AWS service. You could name the new IAM role to look similar to existing ones however you are limited in the names so experiment. You can use this new IAM role in the CLI, the console, and AWS services like EC2.
 
-6.4 Launch EC2 instance with IAM role
+5.4 Launch EC2 instance with IAM role
 
 [Launching an EC2 instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html) with an existing or new IAM role can allow you to run commands from the instance using the role attached to the instance. Follow the instructions to use the launch wizard and when you get to step 3 create a new IAM role and attach. You could make the instance “look” like others that are running, or even hide it in a region that you know is not being used. You could also simply get the credentials that are vended to the EC2 instance and use them elsewhere – beware that GuardDuty will detect this very quickly!
 
-6.5 Obfuscate your IP address
+5.5 Obfuscate your IP address
 
 You can use a VPC endpoint for your EC2 instance that will obfuscate the IP address that will appear in the CloudTrail logs. This could make it more difficult for your partner to find as they won’t be able to search by your IP. This is covered in detail in [this article](https://www.hunters.ai/blog/hunters-research-detecting-obfuscated-attacker-ip-in-aws).
 
-6.6 Get-session-token
+5.6 Get-session-token
 
 The [get-session-token](https://docs.aws.amazon.com/cli/latest/reference/sts/get-session-token.html) command in the CLI and associated API action has the ability to create a temporary access and secret key along with a token. You can then use these credentials instead for a limited period of time.
 
 ### Monitor your partners actions
 
-6.7 Using CloudTrail either through the console or querying via Athena, monitor the actions your partner is taking.
+5.7 Using CloudTrail either through the console or querying via Athena, monitor the actions your partner is taking.
 
 First thing you should look for is attempts to establish persistence, the adverary will want a way back in if their primary mechanism is discovered and stopped. The most simple things they could do would be to get temporary credentials, create IAM access keys, or create IAM users or roles.
 
@@ -419,7 +294,6 @@ where eventname = 'CreateRole' OR eventname = 'CreateUser' OR eventname = 'Creat
 order by eventtime
 ```
 
-6.8 Using the [AWS GuardDuty](https://console.aws.amazon.com/guardduty/) service explore any findings in your account.   
 
 ### Share with the class
 
@@ -429,7 +303,7 @@ Share your methods of establishing persistence with others in the class.
 ***
 
 
-## Hands-on #7: Contain & eradicate
+## Hands-on #6: Contain & eradicate
 
 In this hands-on exercise we are going to:
 * Contain your partner
@@ -456,6 +330,19 @@ The aim of eradication is to completely remove all traces of the threat. What yo
 ### Share with the class
 
 Share your methods of establishing persistence with the class, and refer to your timeline.  
+
+
+***
+
+
+## Hands-on #7: Challenge!
+
+In this hands-on exercise we are going to:
+* Discover how the existing instance in Sydney was compromised
+* Discover what the adversary has done
+* Follow the trail of events
+* Has another user been compromised?
+* Hint: Check VPC flow logs using Athena
 
 
 ***
