@@ -153,7 +153,7 @@ In this hands-on exercise we are going to:
 
 4.4 On the Settings tab, choose Manage.
 
-4.5 For Manage settings, Choose Browse S3, choose the Amazon S3 bucket with the name containing athena, then Choose.
+4.5 For Manage settings, Choose Browse S3, choose the Amazon S3 bucket with the name containing athena.
 
 4.6 Choose Save.
 
@@ -164,37 +164,6 @@ In this hands-on exercise we are going to:
 
 4.8 There are a number of saved queries already in the *Saved queries* tab. CloudTrail queries are prefixed "CT" while the others "VPC" are for VPC Flow Logs. You can find more in an open source repository too: https://github.com/easttimor/aws-incident-response. Here are some examples:
 
-
-#### Identities
-
-What ARNs are creating the most events? An [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) is an Amazon Reource Name, in this case it's an identity that is creating events by accessing:
-```
-SELECT useridentity.arn, COUNT(useridentity.arn) as count
-FROM cloudtrail_log
-group by useridentity.arn
-order by count DESC
-```
-
-Alternate, by PrincipalID:
-```
-SELECT useridentity.principalid, COUNT(useridentity.principalid) as count
-FROM cloudtrail_log
-group by useridentity.principalid order by count DESC
-```
-
-Check for all uses of specific access key:
-```
-select
-   eventTime,
-   userIdentity.userName,
-   useridentity.accesskeyid
-   eventName,
-   requestParameters
-from default.cloudtrail_log
-WHERE useridentity.accesskeyid = 'AKIAEXAMPLE'
-AND from\_iso8601\_timestamp(eventtime) > date\_add('day', -90, now());
-order by eventTime
-```
 
 #### Actions & Regions
 
